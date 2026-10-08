@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>English Reading Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f5f8fb;
+    --panel:#ffffff;
+    --panel-2:#eaf6fb;        /* the soft reading-card blue from the reference */
+    --ink:#1c2733;
+    --ink-soft:#52606d;
+    --border:#dbe6ee;
+    --accent:#1f7a8c;
+    --accent-ink:#0f4c5c;
+    --accent-soft:#dff1f4;
+    --news:#2f6fed;
+    --academic:#7a3fd1;
+    --ielts:#c2780c;
+    --good:#1f9d6c;
+    --shadow: 0 1px 2px rgba(20,40,60,.04), 0 8px 24px rgba(20,40,60,.06);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#10161d; --panel:#161f28; --panel-2:#13262d;
+      --ink:#e9eff4; --ink-soft:#9fb0bd; --border:#243442;
+      --accent:#49b8c9; --accent-ink:#bdeaf2; --accent-soft:#132a30;
+      --news:#6c9bff; --academic:#b794f6; --ielts:#f0b857; --good:#4fd39b;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Inter','Noto Sans Thai',system-ui,sans-serif;
+    line-height:1.55;
+    min-height:100vh;
+  }
+  .th{font-family:'Noto Sans Thai','Inter',system-ui,sans-serif;}
+  a{color:var(--accent);}
+
+  /* ---- App shell ---- */
+  .app{display:flex; min-height:100vh;}
+  .sidebar{
+    width:240px; flex:0 0 240px; background:var(--panel); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; padding:20px 14px; gap:4px; position:sticky; top:0; height:100vh;
+  }
+  .brand{display:flex; align-items:center; gap:10px; padding:4px 10px 18px;}
+  .brand .logo{font-size:26px;}
+  .brand .title{font-weight:800; font-size:16px; letter-spacing:.2px;}
+  .brand .subtitle{font-size:11.5px; color:var(--ink-soft); margin-top:1px;}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px;
+    cursor:pointer; color:var(--ink-soft); font-weight:600; font-size:13.5px; border:1px solid transparent;
+    user-select:none;
+  }
+  .navbtn:hover{background:var(--accent-soft); color:var(--ink);}
+  .navbtn.active{background:var(--accent-soft); color:var(--accent-ink); border-color:var(--border);}
+  .navbtn .ic{font-size:17px; width:20px; text-align:center;}
+  .nav-meta{margin-top:auto; padding:12px 10px 4px; font-size:11px; color:var(--ink-soft); border-top:1px solid var(--border);}
+
+  .main{flex:1; min-width:0; padding:26px 34px 60px; max-width:1180px;}
+  .pagehead{margin-bottom:18px;}
+  .pagehead h1{font-size:21px; margin:0 0 4px; font-weight:800;}
+  .pagehead p{margin:0; color:var(--ink-soft); font-size:13.5px;}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---- Badges ---- */
+  .badge{display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px; font-size:11.5px; font-weight:700;}
+  .badge.news{background:rgba(47,111,237,.12); color:var(--news);}
+  .badge.academic{background:rgba(122,63,209,.12); color:var(--academic);}
+  .badge.ielts{background:rgba(194,120,12,.14); color:var(--ielts);}
+  .badge.level{background:var(--accent-soft); color:var(--accent-ink);}
+
+  /* ---- Articles layout ---- */
+  .articles-layout{display:grid; grid-template-columns:300px 1fr; gap:20px; align-items:start;}
+  .article-list{display:flex; flex-direction:column; gap:10px;}
+  .article-card{
+    background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:13px 14px;
+    cursor:pointer; box-shadow:var(--shadow); transition:transform .12s ease, border-color .12s ease;
+  }
+  .article-card:hover{border-color:var(--accent);}
+  .article-card.selected{border-color:var(--accent); background:var(--accent-soft);}
+  .article-card .row1{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+  .article-card .date{font-size:11px; color:var(--ink-soft);}
+  .article-card h3{font-size:13.5px; margin:2px 0 0; font-weight:700; line-height:1.4;}
+  .article-card .meta{font-size:11px; color:var(--ink-soft); margin-top:6px;}
+
+  .filter-row{display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;}
+  .chip{padding:5px 11px; border-radius:999px; border:1px solid var(--border); background:var(--panel); font-size:12px; font-weight:600; cursor:pointer; color:var(--ink-soft);}
+  .chip.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .search-box{width:100%; padding:9px 12px; border-radius:10px; border:1px solid var(--border); background:var(--panel); color:var(--ink); font-size:13px; margin-bottom:12px;}
+  .search-box:focus{outline:2px solid var(--accent); outline-offset:1px;}
+
+  .reader{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;}
+  .reader-head{padding:20px 24px 14px; border-bottom:1px solid var(--border);}
+  .reader-head .tags{display:flex; gap:6px; margin-bottom:10px;}
+  .reader-head h2{font-size:19px; margin:0 0 8px; font-weight:800;}
+  .reader-head .submeta{font-size:12px; color:var(--ink-soft);}
+  .prompt-box{margin-top:10px; padding:10px 12px; background:var(--accent-soft); border-radius:10px; font-size:12.5px; color:var(--accent-ink);}
+
+  .subtabs{display:flex; gap:6px; padding:12px 24px 0;}
+  .subtab{padding:8px 14px; border-radius:9px 9px 0 0; font-size:13px; font-weight:700; cursor:pointer; color:var(--ink-soft); border:1px solid transparent;}
+  .subtab.active{color:var(--accent-ink); background:var(--panel-2); border-color:var(--border); border-bottom-color:var(--panel-2);}
+
+  .reader-body{padding:4px 24px 26px;}
+
+  .read-bar{display:flex; align-items:center; gap:10px; margin-top:14px; padding:10px 14px; background:var(--panel); border:1px solid var(--border); border-radius:10px; flex-wrap:wrap;}
+  .rbtn{display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:8px; border:1px solid var(--accent); background:var(--accent); color:#fff; font-weight:700; font-size:12.5px; cursor:pointer; white-space:nowrap;}
+  .rbtn.ghost{background:var(--panel); color:var(--ink-soft); border-color:var(--border);}
+  .rbtn:disabled{opacity:.45; cursor:not-allowed;}
+  .rate-select{padding:7px 10px; border-radius:8px; border:1px solid var(--border); background:var(--panel); font-size:12.5px; color:var(--ink);}
+  .tts-note{font-size:11px; color:var(--ink-soft); margin-left:auto;}
+
+  .passage{background:var(--panel-2); border-radius:12px; padding:20px 22px; margin-top:14px;}
+  .para{margin-bottom:16px; padding:6px 8px; border-radius:10px; outline:2px solid transparent; outline-offset:4px; transition:outline-color .2s, background .2s;}
+  .para:last-child{margin-bottom:0;}
+  .para.reading{outline-color:var(--accent); background:rgba(31,122,140,.08);}
+  .para-head{display:flex; align-items:center; gap:8px; margin-bottom:5px;}
+  .para .plabel{display:block; font-size:10.5px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:var(--accent-ink); opacity:.75;}
+  .para-play{border:none; background:var(--accent-soft); color:var(--accent-ink); width:22px; height:22px; flex:0 0 22px; border-radius:50%; cursor:pointer; font-size:10px; display:flex; align-items:center; justify-content:center;}
+  .para-play:hover{background:var(--accent); color:#fff;}
+  .para-play:disabled{opacity:.4; cursor:not-allowed;}
+  .para p{margin:0; font-family:'Merriweather', Georgia, serif; font-size:15.5px; line-height:1.85; color:var(--ink);}
+
+  .spk-btn{border:none; background:var(--accent-soft); color:var(--accent-ink); width:21px; height:21px; flex:0 0 21px; border-radius:50%; cursor:pointer; font-size:10px; display:inline-flex; align-items:center; justify-content:center; vertical-align:middle;}
+  .spk-btn:hover{background:var(--accent); color:#fff;}
+  .spk-btn:disabled{opacity:.4; cursor:not-allowed;}
+
+  .analysis-sec{margin-top:14px; border:1px solid var(--border); border-radius:12px; overflow:hidden;}
+  .analysis-sec summary{padding:12px 16px; cursor:pointer; font-weight:700; font-size:13.5px; background:var(--panel); list-style:none; display:flex; align-items:center; gap:8px;}
+  .analysis-sec summary::-webkit-details-marker{display:none;}
+  .analysis-sec summary::before{content:'\25B8'; color:var(--accent); transition:transform .15s;}
+  .analysis-sec[open] summary::before{transform:rotate(90deg);}
+  .analysis-sec .content{padding:4px 16px 16px;}
+  .analysis-sec .content .block{padding:9px 0; border-top:1px dashed var(--border); font-size:13.5px;}
+  .analysis-sec .content .block:first-child{border-top:none;}
+  .analysis-sec .content .lang-tag{font-size:10px; font-weight:800; color:var(--ink-soft); letter-spacing:.5px; margin-bottom:3px;}
+  .analysis-sec .content .th-text{margin-bottom:8px;}
+  .analysis-sec .content .en-text{color:var(--ink-soft); font-style:italic;}
+
+  .empty{padding:60px 20px; text-align:center; color:var(--ink-soft);}
+
+  /* ---- Vocabulary ---- */
+  .vocab-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:14px;}
+  .vcard{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px 18px; box-shadow:var(--shadow);}
+  .vcard .head{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin-bottom:4px;}
+  .vcard .word{font-size:17px; font-weight:800;}
+  .vcard .phon{font-size:13px; color:var(--ink-soft); font-family:'Merriweather',serif;}
+  .vcard .pos{font-size:11px; font-weight:700; color:var(--accent-ink); background:var(--accent-soft); padding:2px 7px; border-radius:6px;}
+  .vcard .thai-meaning{font-size:13.5px; font-weight:700; color:var(--accent-ink); margin-bottom:8px;}
+  .vcard .def{font-size:13px; color:var(--ink-soft); margin-bottom:8px; line-height:1.5;}
+  .vcard .ex{font-size:13px; font-style:italic; padding:8px 10px; background:var(--panel-2); border-radius:8px; margin-bottom:10px; line-height:1.5;}
+  .vcard .synant{font-size:12px; line-height:1.9;}
+  .vcard .synant b{color:var(--ink);}
+
+  /* ---- Grammar ---- */
+  .gsection{margin-bottom:26px;}
+  .gsection h2{font-size:15.5px; margin:0 0 12px; display:flex; align-items:center; gap:8px;}
+  .tense-table{width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--border); border-radius:12px; overflow:hidden;}
+  .tense-table th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--ink-soft); background:var(--panel-2); padding:10px 12px;}
+  .tense-table td{padding:11px 12px; font-size:13px; border-top:1px solid var(--border); vertical-align:top;}
+  .tense-table tr:hover td{background:var(--accent-soft);}
+  .gram-card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:10px; box-shadow:var(--shadow);}
+  .gram-card h3{font-size:13.5px; margin:0 0 4px;}
+  .gram-card .structure{font-family:'Merriweather',serif; font-size:12.5px; color:var(--accent-ink); background:var(--accent-soft); padding:6px 10px; border-radius:7px; display:inline-block; margin:4px 0 8px;}
+  .gram-card ul{margin:6px 0 0; padding-left:18px; font-size:13px;}
+  .gram-card li{margin-bottom:5px;}
+  .voice-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:720px){.voice-grid{grid-template-columns:1fr;}}
+
+  /* ---- Phonetics ---- */
+  .phon-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px;}
+  .phon-card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:14px 10px 12px; text-align:center; box-shadow:var(--shadow); display:flex; flex-direction:column; align-items:center; gap:6px;}
+  .phon-symbol{font-size:21px; font-weight:800; font-family:'Merriweather',serif; color:var(--accent-ink);}
+  .phon-examples{font-size:11px; color:var(--ink-soft); line-height:1.5;}
+  .phon-play{border:none; background:var(--accent); color:#fff; width:28px; height:28px; border-radius:50%; cursor:pointer; font-size:12px; flex:0 0 28px;}
+  .phon-play:hover{filter:brightness(1.1);}
+  .phon-play:disabled{opacity:.4; cursor:not-allowed;}
+
+  .pair-grid{display:flex; flex-direction:column; gap:8px;}
+  .pair-row{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:10px 16px; box-shadow:var(--shadow);}
+  .pair-side{display:flex; align-items:center; gap:10px;}
+  .pair-vs{font-size:10.5px; color:var(--ink-soft); font-weight:700; text-align:center; white-space:nowrap;}
+  @media (max-width:640px){.pair-row{grid-template-columns:1fr; text-align:left;} .pair-vs{display:none;}}
+
+  .footer-note{margin-top:40px; font-size:11.5px; color:var(--ink-soft); text-align:center;}
+
+  @media (max-width:900px){
+    .app{flex-direction:column;}
+    .sidebar{width:100%; flex-direction:row; height:auto; position:static; overflow-x:auto; padding:10px 14px; align-items:center;}
+    .brand{padding:0 10px 0 0;}
+    .nav-meta{display:none;}
+    .main{padding:18px;}
+    .articles-layout{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">📖</div>
+      <div>
+        <div class="title">English Reading Lab</div>
+        <div class="subtitle th">ฝึกอ่านภาษาอังกฤษส่วนตัว</div>
+      </div>
+    </div>
+    <div class="navbtn active" data-view="today"><span class="ic">☀️</span><span class="th">บทความวันนี้</span></div>
+    <div class="navbtn" data-view="archive"><span class="ic">🗂️</span><span class="th">คลังบทความเก่า</span></div>
+    <div class="navbtn" data-view="grammar"><span class="ic">📘</span><span>Grammar &amp; Structure</span></div>
+    <div class="navbtn" data-view="vocab"><span class="ic">📚</span><span class="th">คลังคำศัพท์</span></div>
+    <div class="navbtn" data-view="phonetics"><span class="ic">🔤</span><span>Phonetic <span class="th" style="font-weight:500;">(Pronunciation symbols)</span></span></div>
+    <div class="nav-meta th" id="navMeta">อัปเดตล่าสุด: —</div>
+  </aside>
+
+  <main class="main">
+
+    <!-- TODAY -->
+    <section class="view active" id="view-today">
+      <div class="pagehead">
+        <h1 class="th">บทความสำหรับฝึกอ่านวันนี้</h1>
+        <p class="th">บทความใหม่ล่าสุดที่ระบบเขียนให้ วันละ 1–2 บทความ เวลา 05:00</p>
+      </div>
+      <div class="articles-layout">
+        <div class="article-list" id="todayList"></div>
+        <div id="todayReader"></div>
+      </div>
+    </section>
+
+    <!-- ARCHIVE -->
+    <section class="view" id="view-archive">
+      <div class="pagehead">
+        <h1 class="th">คลังบทความเก่า</h1>
+        <p class="th">บทความทั้งหมดที่เคยเขียน เรียงจากล่าสุดไปเก่าสุด</p>
+      </div>
+      <input class="search-box th" id="archiveSearch" placeholder="ค้นหาหัวข้อบทความ...">
+      <div class="filter-row" id="archiveFilters"></div>
+      <div class="articles-layout">
+        <div class="article-list" id="archiveList"></div>
+        <div id="archiveReader"></div>
+      </div>
+    </section>
+
+    <!-- GRAMMAR -->
+    <section class="view" id="view-grammar">
+      <div class="pagehead">
+        <h1>Grammar &amp; Structure</h1>
+        <p class="th">โครงสร้างไวยากรณ์ Tense ทั้งหมด, ประโยคความรวม/ความซ้อน, Active/Passive และไวยากรณ์สำคัญอื่น ๆ สำหรับงานเขียน</p>
+      </div>
+      <div class="gsection">
+        <h2>🕒 Tenses</h2>
+        <table class="tense-table">
+          <thead><tr><th>Tense</th><th class="th">ภาษาไทย</th><th>Structure</th><th class="th">การใช้</th><th>Example</th></tr></thead>
+          <tbody id="tenseTableBody"></tbody>
+        </table>
+      </div>
+      <div class="gsection">
+        <h2>🔗 Sentence Types <span class="th" style="font-size:12px;font-weight:500;color:var(--ink-soft)">(Simple / Compound / Complex)</span></h2>
+        <div id="sentenceTypesList"></div>
+      </div>
+      <div class="gsection">
+        <h2>🔄 Active vs Passive Voice</h2>
+        <div class="voice-grid" id="voiceGrid"></div>
+        <div class="gram-card th" id="voiceTip" style="margin-top:10px;"></div>
+      </div>
+      <div class="gsection">
+        <h2 class="th">📙 ไวยากรณ์สำคัญอื่น ๆ สำหรับงานเขียน</h2>
+        <div id="otherGrammarList"></div>
+      </div>
+    </section>
+
+    <!-- VOCAB -->
+    <section class="view" id="view-vocab">
+      <div class="pagehead">
+        <h1 class="th">คลังคำศัพท์ C1</h1>
+        <p class="th">คำศัพท์สำคัญที่รวบรวมจากทุกบทความ</p>
+      </div>
+      <input class="search-box" id="vocabSearch" placeholder="Search word / ค้นหาคำศัพท์...">
+      <div class="filter-row" id="vocabFilters"></div>
+      <div class="vocab-grid" id="vocabGrid"></div>
+    </section>
+
+    <!-- PHONETICS -->
+    <section class="view" id="view-phonetics">
+      <div class="pagehead">
+        <h1>Phonetic <span class="th">(Pronunciation Symbols)</span></h1>
+        <p class="th">สัญลักษณ์การออกเสียงภาษาอังกฤษ (IPA) ทั้งสระและพยัญชนะ กดปุ่ม 🔊 เพื่อฟังตัวอย่างคำที่มีเสียงนั้น</p>
+      </div>
+      <div id="phoneticsContent"></div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+const ARTICLES = [{"id": "2026-10-08-news-01", "date": "2026-10-08", "type": "news", "typeLabel": "การอ่านข่าว (News Article)", "title": "Record-Breaking Heatwaves Put Southeast Asia's Cities to the Test", "level": "C1", "paragraphs": [{"role": "topic", "label": "Topic", "text": "Southeast Asia has endured an unprecedented string of heatwaves this year, with temperatures in several capital cities surpassing 40°C for the first time on record. While the region has always experienced intense heat before the monsoon season, meteorologists warn that climate change is now exacerbating these extremes, pushing both infrastructure and public health systems toward their limits."}, {"role": "body1", "label": "Body 1", "text": "Three decades ago, a heatwave of this magnitude would have been dismissed as a rare anomaly; today, it has become disturbingly routine. Urban planners attribute much of this shift to the heat island effect, in which concrete buildings and asphalt roads absorb and radiate heat far more efficiently than natural landscapes do. Bangkok, for instance, recorded nighttime temperatures that rarely dropped below 30°C throughout April, denying residents the cooling relief they once relied on after sunset. Compounding the problem, electricity demand has surged as millions of households run air conditioners around the clock, straining power grids that were not originally designed to handle such sustained loads."}, {"role": "body2", "label": "Body 2", "text": "The human cost of this heat is also becoming apparent. Hospitals across the region have reported a sharp rise in heatstroke cases, particularly among outdoor workers and the elderly, who are especially vulnerable to extreme temperatures. In response, several governments have begun adjusting school and work schedules, shifting outdoor activities to early morning hours whenever possible. Although these measures offer short-term relief, experts caution that they merely treat the symptoms rather than the underlying cause: without substantial investment in green infrastructure and renewable energy, the region's cities will continue to be exposed to increasingly punishing heat in the years ahead."}, {"role": "conclusion", "label": "Conclusion", "text": "Ultimately, the recent heatwaves serve as a stark reminder that climate adaptation can no longer be postponed. Unless policymakers commit to long-term solutions, the combination of rising temperatures and expanding urban sprawl is likely to make extreme heat not an occasional crisis, but a defining feature of life in Southeast Asia."}], "analysis": {"structure": {"th": "ย่อหน้าที่ 1 (Topic) เปิดเรื่องด้วยข้อเท็จจริงที่สะเทือนใจ (unprecedented heatwaves) แล้วตามด้วยประโยคที่ระบุประเด็นหลักของบทความ ย่อหน้าที่ 2 (Body 1) อธิบายสาเหตุเชิงกายภาพ/เชิงเมือง (urban heat island) พร้อมหลักฐานเชิงตัวเลข ย่อหน้าที่ 3 (Body 2) ขยายไปสู่ผลกระทบต่อมนุษย์และการตอบสนองของภาครัฐ ส่วน Conclusion สรุปด้วยคำเตือนเชิงนโยบาย ทำให้ผู้อ่านเห็น 'เหตุ-ผล-ทางแก้' ครบในบทความสั้น ๆ", "en": "Paragraph 1 (Topic) opens with a striking fact before stating the article's central claim. Paragraph 2 (Body 1) explains the physical/urban cause with supporting data. Paragraph 3 (Body 2) extends the discussion to human impact and policy response, while the Conclusion closes with a forward-looking warning — giving the reader a complete cause→effect→response arc in a short piece."}, "tense": {"th": "บทความผสม Present Perfect (has endured, has become) เพื่อเชื่อมอดีตที่ยังมีผลถึงปัจจุบัน, Conditional Perfect (would have been dismissed) เพื่อเปรียบเทียบอดีตกับปัจจุบัน, และ Simple Present (attribute, recorded) สำหรับข้อเท็จจริงทั่วไป การสลับ tense แบบนี้ทำให้เรื่องราวมีมิติของเวลาที่ชัดเจนและน่าติดตาม", "en": "The passage mixes Present Perfect (has endured, has become) to link the past with present relevance, a Conditional Perfect (would have been dismissed) to contrast past and present norms, and Simple Present for general facts. This deliberate tense-shifting gives the narrative a clear sense of time and keeps it engaging rather than flat."}, "sentenceVariety": {"th": "ตัวอย่างประโยคซับซ้อน (complex sentence): “While the region has always experienced intense heat before the monsoon season, meteorologists warn that climate change is now exacerbating these extremes” ใช้ subordinate clause (while...) นำหน้า main clause ตัวอย่างประโยครวม (compound/complex mix): การเชื่อมประโยคด้วย semicolon ใน “...would have been dismissed as a rare anomaly; today, it has become disturbingly routine” ช่วยคุมจังหวะการอ่านและเน้นความขัดแย้งระหว่างอดีตกับปัจจุบัน", "en": "Example of a complex sentence: “While the region has always experienced intense heat before the monsoon season, meteorologists warn that climate change is now exacerbating these extremes” — a subordinate clause fronts the main clause. The semicolon link in “...would have been dismissed as a rare anomaly; today, it has become disturbingly routine” creates a compact compound structure that sharpens the past-vs-present contrast."}, "voice": {"th": "ประโยค active เช่น “Hospitals... have reported a sharp rise” เน้นผู้กระทำที่ชัดเจน ส่วน passive เช่น “cities will continue to be exposed to increasingly punishing heat” ใช้เมื่อผู้เขียนต้องการเน้นที่ 'เมือง' (ผู้ถูกกระทำ) มากกว่าผู้กระทำ ซึ่งเหมาะกับงานเขียนข่าว/วิชาการที่เน้นผลกระทบมากกว่าผู้ก่อเหตุ", "en": "Active voice, e.g. “Hospitals have reported a sharp rise”, foregrounds a clear agent. Passive voice, e.g. “cities will continue to be exposed to increasingly punishing heat”, shifts focus onto the affected entity (the cities) rather than the agent — a common technique in news/academic writing when the impact matters more than who causes it."}, "collocations": {"th": "คำที่ปรากฏร่วมกันบ่อย (collocations) ในบทความ: “electricity demand surged”, “straining power grids”, “a stark reminder”, “substantial investment” การใช้ collocation แทนคำเดี่ยว ๆ ช่วยให้ภาษาฟังเป็นธรรมชาติแบบเจ้าของภาษา", "en": "Key collocations: “electricity demand surged”, “straining power grids”, “a stark reminder”, “substantial investment”. Using fixed word pairings instead of single words makes the language sound natural and native-like."}}, "vocabIds": ["unprecedented", "exacerbate", "anomaly", "compound-verb", "sustained", "vulnerable", "stark", "sprawl", "postpone"], "wordCount": 314}, {"id": "2026-10-08-academic-01", "date": "2026-10-08", "type": "academic", "typeLabel": "บทความวิชาการ/งานวิจัย (Academic / Research Article)", "title": "The Cognitive Costs of Sleep Deprivation: What Recent Research Reveals", "level": "C1", "paragraphs": [{"role": "topic", "label": "Topic", "text": "For decades, sleep was widely regarded as a passive state in which the brain simply rested. However, a growing body of neuroscientific research has overturned this assumption, revealing that sleep plays an active and indispensable role in cognitive functioning. Chronic sleep deprivation, scientists now argue, does not merely leave people feeling tired; it measurably impairs memory consolidation, attention, and decision-making."}, {"role": "body1", "label": "Body 1", "text": "One particularly influential study, conducted at a sleep research institute in the United States, found that participants who were restricted to five hours of sleep per night for a week performed significantly worse on tasks requiring sustained attention than those who slept eight hours. Interestingly, many of the sleep-deprived participants were unaware of their own decline in performance, a phenomenon researchers attribute to the brain's diminished capacity for accurate self-assessment under fatigue. Such findings suggest that the dangers of insufficient sleep are often underestimated by the very people experiencing them."}, {"role": "body2", "label": "Body 2", "text": "At a biological level, this impairment appears to be linked to the glymphatic system, a recently discovered waste-clearance pathway that becomes most active during deep sleep. When sleep is cut short, toxic proteins associated with neurodegenerative diseases are not fully flushed from the brain, and their gradual accumulation has been correlated with an elevated risk of cognitive decline later in life. Although this research is still evolving, it has already prompted public health bodies to revise their sleep recommendations and to emphasise sleep quality as rigorously as diet and exercise."}, {"role": "conclusion", "label": "Conclusion", "text": "Taken together, these findings indicate that sleep should be treated not as a luxury to be sacrificed when schedules grow busy, but as a biological necessity on which cognitive performance fundamentally depends. As research into the glymphatic system continues, it seems increasingly likely that protecting sleep will become a central pillar of preventative healthcare."}], "analysis": {"structure": {"th": "โครงสร้างตามแบบงานวิจัย: Topic ตั้งสมมติฐาน/ความเชื่อเดิมแล้วหักล้างด้วยหลักฐานใหม่ (research gap), Body 1 อ้างอิงผลการทดลองเฉพาะเจาะจง (เชิงพฤติกรรม), Body 2 อธิบายกลไกทางชีวภาพเบื้องหลัง (เชิงกลไก/สาเหตุ) และ Conclusion สังเคราะห์ผลลัพธ์เป็นข้อเสนอเชิงนโยบาย/สุขภาพ รูปแบบนี้คือ 'claim → evidence → mechanism → implication' ซึ่งพบได้ทั่วไปในบทความวิชาการ", "en": "This follows a typical research-article arc: the Topic paragraph states an old assumption and overturns it with new evidence (a research gap), Body 1 cites a specific behavioural study, Body 2 explains the underlying biological mechanism, and the Conclusion synthesises the findings into a health/policy implication — the classic “claim → evidence → mechanism → implication” pattern common in academic writing."}, "tense": {"th": "ใช้ Past Simple (was regarded, found, performed) เพื่อรายงานสิ่งที่เกิดขึ้น/ค้นพบในอดีต (ผลวิจัย), Present Perfect (has overturned, has been correlated, has already prompted) เพื่อแสดงความรู้สะสมที่ยังใช้ได้ถึงปัจจุบัน และ Present Simple (appears, seems, continues) สำหรับข้อสรุปทั่วไปที่ยังเป็นจริงอยู่ — เป็นรูปแบบ tense มาตรฐานของ Research Article", "en": "Past Simple (was regarded, found, performed) reports what happened/was discovered in specific studies; Present Perfect (has overturned, has been correlated, has already prompted) shows accumulated knowledge still valid today; Present Simple (appears, seems, continues) states ongoing general truths. This is the standard tense pattern of academic research writing."}, "sentenceVariety": {"th": "ประโยคซับซ้อนหลายชั้น: “One particularly influential study, conducted at a sleep research institute..., found that participants who were restricted to five hours of sleep... performed significantly worse...” มี participle clause (conducted at...) แทรกกลาง และ relative clause (who were restricted...) ซ้อนอยู่ในอนุประโยคนาม (that participants...) แสดงความสามารถในการบีบอัดข้อมูลหลายชั้นในประโยคเดียวแบบงานวิชาการ", "en": "Multi-layered complex sentences, e.g. “One particularly influential study, conducted at a sleep research institute..., found that participants who were restricted to five hours of sleep... performed significantly worse...”, embed a participle clause (conducted at...) and a relative clause (who were restricted...) inside a noun clause (that participants...) — typical of how academic prose compresses multiple layers of information into one sentence."}, "voice": {"th": "Passive voice ใช้บ่อยในงานวิชาการเพื่อเน้นข้อมูล/ผลลัพธ์มากกว่าตัวผู้วิจัย เช่น “participants who were restricted to five hours of sleep”, “toxic proteins... are not fully flushed from the brain”, “their gradual accumulation has been correlated with...” ขณะที่ active voice ใช้เมื่อกล่าวถึงนักวิจัย/การกระทำที่ชัดเจน เช่น “researchers attribute”", "en": "Passive voice dominates academic writing to foreground data/results rather than the researcher, e.g. “participants who were restricted to five hours of sleep”, “toxic proteins... are not fully flushed from the brain”, “their gradual accumulation has been correlated with...”. Active voice is reserved for clear agentive actions, e.g. “researchers attribute”."}, "collocations": {"th": "collocation เชิงวิชาการที่ควรจำ: “a growing body of research”, “memory consolidation”, “elevated risk”, “revise recommendations”, “central pillar” วลีเหล่านี้เป็น 'academic set phrases' ที่ปรากฏซ้ำในงานเขียนวิชาการภาษาอังกฤษแทบทุกสาขา", "en": "Academic collocations worth memorising: “a growing body of research”, “memory consolidation”, “elevated risk”, “revise recommendations”, “central pillar” — these are recurring academic set phrases found across nearly every field of English academic writing."}}, "vocabIds": ["indispensable", "consolidation", "diminished", "phenomenon", "correlate", "neurodegenerative", "pillar", "rigorously", "prompt-verb"], "wordCount": 294}, {"id": "2026-10-08-ielts-01", "date": "2026-10-08", "type": "ielts", "typeLabel": "ข้อสอบ Writing ของ IELTS (IELTS Writing Task 2)", "title": "Remote Work vs. Office Work — Task 2 Essay", "level": "C1", "prompt": "Some people believe that employees should be allowed to work from home permanently, while others think traditional office-based work is more beneficial. Discuss both views and give your own opinion.", "paragraphs": [{"role": "topic", "label": "Topic (Introduction)", "text": "The question of whether employees should work permanently from home or return to a traditional office has become increasingly contentious since the pandemic reshaped working habits worldwide. While some argue that remote work offers unmatched flexibility and efficiency, others maintain that office-based work fosters collaboration and professional growth in ways that cannot be replicated online. This essay will examine both perspectives before presenting my own view."}, {"role": "body1", "label": "Body 1", "text": "Proponents of remote work point to the considerable autonomy it grants employees over their own schedules. Without a daily commute, workers can reclaim hours that would otherwise be lost to traffic, time that can instead be devoted to family responsibilities or personal wellbeing. Moreover, many companies have reported that productivity actually increased when staff were given the freedom to work from home, largely because employees could structure their day around their own peak periods of concentration rather than a fixed nine-to-five schedule."}, {"role": "body2", "label": "Body 2", "text": "On the other hand, those who favour office-based work emphasise the irreplaceable value of face-to-face interaction. Spontaneous conversations by the coffee machine or impromptu brainstorming sessions often generate ideas that would be unlikely to emerge over a video call. Junior employees, in particular, benefit from being able to observe experienced colleagues directly, a form of informal mentorship that is far harder to cultivate remotely. Furthermore, a shared physical workplace can strengthen organisational culture, helping employees feel connected to a collective purpose rather than isolated in their own homes."}, {"role": "conclusion", "label": "Conclusion", "text": "In my opinion, neither model is inherently superior; rather, the ideal arrangement depends on the nature of the role and the individual concerned. A hybrid approach, in which employees divide their time between home and office, would allow organisations to combine the flexibility of remote work with the collaborative benefits of in-person interaction, and I believe this balance is likely to define the future of work."}], "analysis": {"structure": {"th": "นี่คือโครงสร้างเรียงความ IELTS Task 2 แบบ 'Discuss both views and give your own opinion' แบบคลาสสิก: Introduction (paraphrase คำถาม + thesis ว่าจะพูดทั้งสองมุมมองแล้วค่อยให้ความเห็น), Body 1 เสนอมุมมองที่ 1 (ข้อดีของ remote work) พร้อมเหตุผล+ตัวอย่าง, Body 2 เสนอมุมมองที่ 2 (ข้อดีของ office work) พร้อมเหตุผล+ตัวอย่าง และ Conclusion ให้ความเห็นส่วนตัว (own opinion) อย่างชัดเจนพร้อมเหตุผลสนับสนุน ซึ่งตรงตาม Task Response criterion ของ IELTS ที่ต้องตอบครบทุกส่วนของคำถาม", "en": "This follows the classic IELTS Task 2 ‘discuss both views and give your own opinion’ structure: the Introduction paraphrases the question and states the thesis (both views will be discussed, followed by an opinion); Body 1 presents view 1 (benefits of remote work) with reasons and examples; Body 2 presents view 2 (benefits of office work) with reasons and examples; and the Conclusion gives a clear personal opinion with supporting reasoning — directly satisfying the IELTS Task Response criterion, which requires every part of the question to be addressed."}, "tense": {"th": "ใช้ Present Simple เป็นหลัก (argue, maintain, grants, emphasise) เพราะเป็นการเขียนเชิงความเห็น/ข้อเท็จจริงทั่วไป, Present Perfect (has become, have reported) สำหรับแนวโน้มที่เริ่มในอดีตและดำเนินถึงปัจจุบัน, และ Past Simple/Conditional (increased, would be unlikely, would allow) เมื่อยกตัวอย่างเหตุการณ์เฉพาะหรือสมมติ การผสม tense เช่นนี้เป็นสิ่งที่ผู้ตรวจ IELTS มองหาใน Grammatical Range", "en": "Mainly Present Simple (argue, maintain, grants, emphasise) for opinion/general-truth writing, Present Perfect (has become, have reported) for trends starting in the past and continuing now, and Past Simple/Conditional (increased, would be unlikely, would allow) for specific or hypothetical examples. This tense variety is exactly what IELTS examiners look for under Grammatical Range and Accuracy."}, "sentenceVariety": {"th": "ตัวอย่างประโยคซับซ้อนที่ใช้ relative clause ซ้อน: “workers can reclaim hours that would otherwise be lost to traffic, time that can instead be devoted to...” และประโยครวม-ซับซ้อน (compound-complex) ที่ใช้ semicolon: “neither model is inherently superior; rather, the ideal arrangement depends on...” การสลับความยาวและโครงสร้างประโยคคือสิ่งที่ยกระดับคะแนน Coherence and Cohesion", "en": "Example of nested relative clauses: “workers can reclaim hours that would otherwise be lost to traffic, time that can instead be devoted to...”, and a compound-complex sentence joined by a semicolon: “neither model is inherently superior; rather, the ideal arrangement depends on...”. This mix of sentence length and structure is exactly what raises an IELTS Coherence and Cohesion score."}, "voice": {"th": "ส่วนใหญ่ใช้ active voice เพื่อให้ข้อโต้แย้งตรงไปตรงมา (Proponents... point to, those who favour... emphasise) แต่แทรก passive เมื่อเน้นผลลัพธ์มากกว่าผู้กระทำ เช่น “time that can instead be devoted to family responsibilities” และ “ideas that would be unlikely to emerge”", "en": "Mostly active voice to keep the argumentation direct (Proponents... point to, those who favour... emphasise), with passive inserted when the result matters more than the agent, e.g. “time that can instead be devoted to family responsibilities” and “ideas that would be unlikely to emerge”."}, "collocations": {"th": "collocation ที่เป็นประโยชน์มากสำหรับ IELTS Writing: “considerable autonomy”, “face-to-face interaction”, “peak periods of concentration”, “shared physical workplace”, “strike/strengthen organisational culture” การสะสม collocation แบบนี้ช่วยยกระดับคะแนน Lexical Resource ได้ชัดเจน", "en": "High-value IELTS collocations: “considerable autonomy”, “face-to-face interaction”, “peak periods of concentration”, “shared physical workplace”, “strengthen organisational culture”. Collecting collocations like these is one of the clearest ways to raise a Lexical Resource score."}}, "vocabIds": ["contentious", "foster", "autonomy", "reclaim", "impromptu", "cultivate", "inherently", "hybrid", "collective"], "wordCount": 302}];
+const VOCAB = [{"id": "unprecedented", "word": "unprecedented", "phonetic": "/ʌnˈpres.ɪ.den.tɪd/", "pos": "adj.", "thai": "ไม่เคยเกิดขึ้นมาก่อน", "definition": "never having happened, existed, or been known before.", "example": "Southeast Asia has endured an unprecedented string of heatwaves this year.", "synonyms": ["unparalleled", "unmatched", "novel"], "antonyms": ["common", "usual", "typical"], "source": ["news"]}, {"id": "exacerbate", "word": "exacerbate", "phonetic": "/ɪɡˈzæs.ər.beɪt/", "pos": "vt", "thai": "ทำให้ (ปัญหา) รุนแรงขึ้น", "definition": "to make a problem, bad situation, or negative feeling worse.", "example": "Climate change is now exacerbating these extremes.", "synonyms": ["aggravate", "worsen", "intensify"], "antonyms": ["alleviate", "ease", "mitigate"], "source": ["news"]}, {"id": "anomaly", "word": "anomaly", "phonetic": "/əˈnɒm.ə.li/", "pos": "n", "thai": "ความผิดปกติ, สิ่งที่เบี่ยงเบนไปจากปกติ", "definition": "something that deviates from what is standard, normal, or expected.", "example": "A heatwave of this magnitude would have been dismissed as a rare anomaly.", "synonyms": ["irregularity", "deviation", "oddity"], "antonyms": ["norm", "regularity"], "source": ["news"]}, {"id": "compound-verb", "word": "compound (v.)", "phonetic": "/kəmˈpaʊnd/", "pos": "vt", "thai": "ทำให้ซ้ำเติม/รุนแรงขึ้นไปอีก", "definition": "to make a problem or difficult situation worse by adding another factor.", "example": "Compounding the problem, electricity demand has surged as millions run air conditioners.", "synonyms": ["aggravate", "intensify", "worsen"], "antonyms": ["resolve", "alleviate", "ease"], "source": ["news"]}, {"id": "sustained", "word": "sustained", "phonetic": "/səˈsteɪnd/", "pos": "adj.", "thai": "ต่อเนื่อง, ยาวนาน", "definition": "continuing for an extended period without interruption.", "example": "Power grids were not originally designed to handle such sustained loads.", "synonyms": ["prolonged", "continuous", "persistent"], "antonyms": ["brief", "intermittent", "temporary"], "source": ["news", "academic"]}, {"id": "vulnerable", "word": "vulnerable", "phonetic": "/ˈvʌl.nər.ə.bəl/", "pos": "adj.", "thai": "เปราะบาง, เสี่ยงต่ออันตราย", "definition": "susceptible to being physically or emotionally harmed or affected.", "example": "The elderly are especially vulnerable to extreme temperatures.", "synonyms": ["susceptible", "exposed", "at-risk"], "antonyms": ["resilient", "protected", "immune"], "source": ["news"]}, {"id": "stark", "word": "stark", "phonetic": "/stɑːk/", "pos": "adj.", "thai": "ชัดเจนจนน่าตกใจ, รุนแรง", "definition": "severe and harshly clear or unambiguous.", "example": "The recent heatwaves serve as a stark reminder that climate adaptation can no longer be postponed.", "synonyms": ["harsh", "severe", "blunt"], "antonyms": ["subtle", "mild", "ambiguous"], "source": ["news"]}, {"id": "sprawl", "word": "sprawl", "phonetic": "/sprɔːl/", "pos": "n", "thai": "การขยายตัวอย่างไร้ระเบียบของเมือง", "definition": "the uncontrolled expansion of an urban area into surrounding land.", "example": "Rising temperatures and expanding urban sprawl are likely to make extreme heat a defining feature of life.", "synonyms": ["expansion", "spread", "overgrowth"], "antonyms": ["containment", "compactness"], "source": ["news"]}, {"id": "postpone", "word": "postpone", "phonetic": "/pəʊstˈpəʊn/", "pos": "vt", "thai": "เลื่อนออกไป, ผัดผ่อน", "definition": "to delay an event or action until a later time.", "example": "Climate adaptation can no longer be postponed.", "synonyms": ["delay", "defer", "put off"], "antonyms": ["expedite", "hasten", "advance"], "source": ["news"]}, {"id": "indispensable", "word": "indispensable", "phonetic": "/ˌɪn.dɪˈspen.sə.bəl/", "pos": "adj.", "thai": "ขาดไม่ได้, จำเป็นอย่างยิ่ง", "definition": "absolutely necessary; too important to be without.", "example": "Sleep plays an active and indispensable role in cognitive functioning.", "synonyms": ["essential", "vital", "crucial"], "antonyms": ["unnecessary", "dispensable", "optional"], "source": ["academic"]}, {"id": "consolidation", "word": "consolidation", "phonetic": "/kənˌsɒl.ɪˈdeɪ.ʃən/", "pos": "n", "thai": "การรวบรวม/ทำให้มั่นคง (ความจำ)", "definition": "the process of making something stronger or more solid; here, strengthening memories in the brain.", "example": "Chronic sleep deprivation measurably impairs memory consolidation.", "synonyms": ["strengthening", "reinforcement", "stabilization"], "antonyms": ["fragmentation", "disruption"], "source": ["academic"]}, {"id": "diminished", "word": "diminished", "phonetic": "/dɪˈmɪn.ɪʃt/", "pos": "adj.", "thai": "ที่ลดลง, ด้อยลง", "definition": "made smaller, weaker, or less in degree.", "example": "A phenomenon researchers attribute to the brain's diminished capacity for accurate self-assessment.", "synonyms": ["reduced", "weakened", "lessened"], "antonyms": ["enhanced", "increased", "boosted"], "source": ["academic"]}, {"id": "phenomenon", "word": "phenomenon", "phonetic": "/fəˈnɒm.ɪ.nən/", "pos": "n", "thai": "ปรากฏการณ์", "definition": "a fact or situation that is observed to exist or happen.", "example": "Many sleep-deprived participants were unaware of their own decline — a phenomenon researchers are still studying.", "synonyms": ["occurrence", "event", "happening"], "antonyms": ["non-event"], "source": ["academic"]}, {"id": "correlate", "word": "correlate", "phonetic": "/ˈkɒr.ə.leɪt/", "pos": "vt/vi", "thai": "มีความสัมพันธ์กัน", "definition": "to have a mutual relationship or connection, so that one variable tends to change with another.", "example": "Their gradual accumulation has been correlated with an elevated risk of cognitive decline later in life.", "synonyms": ["associate", "connect", "relate"], "antonyms": ["dissociate", "differ"], "source": ["academic"]}, {"id": "neurodegenerative", "word": "neurodegenerative", "phonetic": "/ˌnjʊər.oʊ.dɪˈdʒen.ər.ə.tɪv/", "pos": "adj.", "thai": "เกี่ยวกับความเสื่อมของระบบประสาท", "definition": "relating to the progressive loss of structure or function of neurons in the brain.", "example": "Toxic proteins associated with neurodegenerative diseases accumulate when sleep is cut short.", "synonyms": ["degenerative", "progressive (neurological)"], "antonyms": ["regenerative"], "source": ["academic"]}, {"id": "pillar", "word": "pillar", "phonetic": "/ˈpɪl.ər/", "pos": "n (figurative)", "thai": "เสาหลัก, องค์ประกอบสำคัญ", "definition": "a fundamental and supporting element of a system or belief.", "example": "Protecting sleep will become a central pillar of preventative healthcare.", "synonyms": ["cornerstone", "foundation", "mainstay"], "antonyms": ["minor factor", "side issue"], "source": ["academic"]}, {"id": "rigorously", "word": "rigorously", "phonetic": "/ˈrɪɡ.ər.ə.sli/", "pos": "adv", "thai": "อย่างเข้มงวด/จริงจัง", "definition": "in a thorough, careful, and exacting manner.", "example": "Public health bodies now emphasise sleep quality as rigorously as diet and exercise.", "synonyms": ["strictly", "thoroughly", "meticulously"], "antonyms": ["carelessly", "loosely", "casually"], "source": ["academic"]}, {"id": "prompt-verb", "word": "prompt (v.)", "phonetic": "/prɒmpt/", "pos": "vt", "thai": "กระตุ้นให้เกิดขึ้น", "definition": "to cause something to happen or be done.", "example": "This research has already prompted public health bodies to revise their sleep recommendations.", "synonyms": ["trigger", "induce", "spur"], "antonyms": ["discourage", "deter", "hinder"], "source": ["academic"]}, {"id": "contentious", "word": "contentious", "phonetic": "/kənˈten.ʃəs/", "pos": "adj.", "thai": "เป็นที่ถกเถียง", "definition": "likely to cause disagreement or an argument.", "example": "The question has become increasingly contentious since the pandemic reshaped working habits.", "synonyms": ["controversial", "disputed", "divisive"], "antonyms": ["uncontroversial", "undisputed"], "source": ["ielts"]}, {"id": "foster", "word": "foster", "phonetic": "/ˈfɒs.tər/", "pos": "vt", "thai": "ส่งเสริม, บ่มเพาะ", "definition": "to encourage the development or growth of something.", "example": "Office-based work fosters collaboration and professional growth.", "synonyms": ["promote", "nurture", "cultivate"], "antonyms": ["hinder", "suppress", "stifle"], "source": ["ielts"]}, {"id": "autonomy", "word": "autonomy", "phonetic": "/ɔːˈtɒn.ə.mi/", "pos": "n", "thai": "อิสระในการตัดสินใจด้วยตนเอง", "definition": "the right or condition of self-governance; independence in decision-making.", "example": "Remote work grants employees considerable autonomy over their own schedules.", "synonyms": ["independence", "self-governance", "freedom"], "antonyms": ["dependence", "subordination"], "source": ["ielts"]}, {"id": "reclaim", "word": "reclaim", "phonetic": "/rɪˈkleɪm/", "pos": "vt", "thai": "เรียกคืน, ได้กลับคืนมา", "definition": "to get something back that was lost or taken away.", "example": "Workers can reclaim hours that would otherwise be lost to traffic.", "synonyms": ["recover", "regain", "retrieve"], "antonyms": ["lose", "forfeit", "surrender"], "source": ["ielts"]}, {"id": "impromptu", "word": "impromptu", "phonetic": "/ɪmˈprɒmp.tjuː/", "pos": "adj.", "thai": "ที่เกิดขึ้นโดยไม่ได้วางแผน", "definition": "done without preparation; spontaneous.", "example": "Impromptu brainstorming sessions often generate ideas that are unlikely to emerge over a video call.", "synonyms": ["spontaneous", "unplanned", "improvised"], "antonyms": ["planned", "scheduled", "rehearsed"], "source": ["ielts"]}, {"id": "cultivate", "word": "cultivate", "phonetic": "/ˈkʌl.tɪ.veɪt/", "pos": "vt", "thai": "ปลูกฝัง, บ่มเพาะ (เชิงนามธรรม)", "definition": "to try to acquire or develop a skill, relationship, or quality over time.", "example": "Informal mentorship is far harder to cultivate remotely.", "synonyms": ["develop", "foster", "nurture"], "antonyms": ["neglect", "abandon"], "source": ["ielts"]}, {"id": "inherently", "word": "inherently", "phonetic": "/ɪnˈhɪə.rənt.li/", "pos": "adv", "thai": "โดยเนื้อแท้, โดยธรรมชาติ", "definition": "existing as a basic or permanent feature of something.", "example": "Neither working model is inherently superior to the other.", "synonyms": ["fundamentally", "intrinsically", "essentially"], "antonyms": ["superficially", "artificially"], "source": ["ielts"]}, {"id": "hybrid", "word": "hybrid", "phonetic": "/ˈhaɪ.brɪd/", "pos": "adj./n", "thai": "ผสมผสาน, ลูกผสม", "definition": "combining two different elements or approaches.", "example": "A hybrid approach would let organisations combine the benefits of both home and office work.", "synonyms": ["mixed", "combined", "blended"], "antonyms": ["pure", "uniform", "single"], "source": ["ielts"]}, {"id": "collective", "word": "collective", "phonetic": "/kəˈlek.tɪv/", "pos": "adj.", "thai": "ร่วมกัน, ส่วนรวม", "definition": "done or shared by every member of a group.", "example": "A shared workplace helps employees feel connected to a collective purpose.", "synonyms": ["shared", "communal", "joint"], "antonyms": ["individual", "personal", "solitary"], "source": ["ielts"]}];
+const GRAMMAR = {"tenses": [{"name": "Present Simple", "thai": "ปัจจุบันกาลธรรมดา", "structure": "S + V1 (s/es) | S + do/does not + V1", "use_th": "ข้อเท็จจริงทั่วไป, สิ่งที่เป็นจริงเสมอ, กิจวัตร", "use_en": "general facts, permanent truths, routines", "example": "Meteorologists warn that climate change is exacerbating these extremes."}, {"name": "Present Continuous", "thai": "ปัจจุบันกาลกำลังดำเนินอยู่", "structure": "S + am/is/are + V-ing", "use_th": "สิ่งที่กำลังเกิดขึ้นตอนนี้ หรือแนวโน้มที่กำลังเปลี่ยนแปลง", "use_en": "actions happening now, or an evolving trend", "example": "Climate change is now exacerbating these extremes."}, {"name": "Present Perfect", "thai": "ปัจจุบันกาลสมบูรณ์", "structure": "S + have/has + V3", "use_th": "เหตุการณ์ในอดีตที่ยังมีผลหรือเกี่ยวข้องกับปัจจุบัน ไม่ระบุเวลาที่แน่นอน", "use_en": "past events with present relevance; no specific time stated", "example": "Southeast Asia has endured an unprecedented string of heatwaves this year."}, {"name": "Present Perfect Continuous", "thai": "ปัจจุบันกาลสมบูรณ์ต่อเนื่อง", "structure": "S + have/has been + V-ing", "use_th": "เน้นความต่อเนื่องของการกระทำที่เริ่มในอดีตและยังดำเนินอยู่", "use_en": "emphasises the duration of an action that started in the past and continues", "example": "Researchers have been studying the glymphatic system for several years."}, {"name": "Past Simple", "thai": "อดีตกาลธรรมดา", "structure": "S + V2", "use_th": "เหตุการณ์ที่จบแล้วในอดีต มีเวลาชัดเจนหรือโดยนัย", "use_en": "completed actions at a specific/implied past time", "example": "Participants who were restricted to five hours of sleep performed significantly worse."}, {"name": "Past Continuous", "thai": "อดีตกาลกำลังดำเนินอยู่", "structure": "S + was/were + V-ing", "use_th": "เหตุการณ์ที่กำลังดำเนินอยู่ ณ จุดหนึ่งในอดีต มักถูกขัดจังหวะ", "use_en": "an action in progress at a point in the past, often interrupted", "example": "While researchers were analysing the data, an unexpected pattern emerged."}, {"name": "Past Perfect", "thai": "อดีตกาลสมบูรณ์", "structure": "S + had + V3", "use_th": "เหตุการณ์ที่เกิดขึ้นก่อนอีกเหตุการณ์หนึ่งในอดีต (อดีตของอดีต)", "use_en": "an action completed before another past action/time (‘the past-before-the-past’)", "example": "By the time the study began, sleep science had already advanced considerably."}, {"name": "Past Perfect Continuous", "thai": "อดีตกาลสมบูรณ์ต่อเนื่อง", "structure": "S + had been + V-ing", "use_th": "เน้นระยะเวลาของการกระทำที่ดำเนินมาก่อนอีกเหตุการณ์ในอดีต", "use_en": "emphasises how long an action had been going on before another past event", "example": "The region had been experiencing dry conditions for months before the heatwave struck."}, {"name": "Future Simple", "thai": "อนาคตกาลธรรมดา", "structure": "S + will + V1", "use_th": "การคาดการณ์ การตัดสินใจทันที หรือสัญญา", "use_en": "predictions, spontaneous decisions, promises", "example": "The region's cities will continue to be exposed to increasingly punishing heat."}, {"name": "Future Continuous", "thai": "อนาคตกาลกำลังดำเนินอยู่", "structure": "S + will be + V-ing", "use_th": "เหตุการณ์ที่จะกำลังดำเนินอยู่ ณ จุดหนึ่งในอนาคต", "use_en": "an action that will be in progress at a specific future time", "example": "This time next year, researchers will be publishing their follow-up findings."}, {"name": "Future Perfect", "thai": "อนาคตกาลสมบูรณ์", "structure": "S + will have + V3", "use_th": "เหตุการณ์ที่จะเสร็จสมบูรณ์ก่อนจุดหนึ่งในอนาคต", "use_en": "an action that will be completed before a specific point in the future", "example": "By 2030, many cities will have adopted stricter heat-adaptation policies."}, {"name": "Future Perfect Continuous", "thai": "อนาคตกาลสมบูรณ์ต่อเนื่อง", "structure": "S + will have been + V-ing", "use_th": "เน้นระยะเวลาของการกระทำที่จะดำเนินต่อเนื่องจนถึงจุดหนึ่งในอนาคต", "use_en": "emphasises the duration of an action continuing up to a future point", "example": "By the time the policy takes effect, temperatures will have been rising for a decade."}], "sentenceTypes": [{"name": "Simple sentence", "thai": "ประโยคความเดียว", "structure": "One independent clause (1 subject + 1 verb idea)", "example": "Hospitals reported a sharp rise in heatstroke cases.", "note_th": "มีใจความเดียว กระชับ ใช้เน้นข้อเท็จจริงสั้น ๆ", "note_en": "One complete idea; useful for stating a fact concisely."}, {"name": "Compound sentence", "thai": "ประโยคความรวม", "structure": "Independent clause + coordinating conjunction (FANBOYS: for, and, nor, but, or, yet, so) / semicolon + independent clause", "example": "Electricity demand has surged, and power grids are struggling to cope.", "note_th": "เชื่อม 2 ประโยคสมบูรณ์ที่มีน้ำหนักเท่ากันด้วยคำเชื่อม (and, but, so...) หรือ semicolon", "note_en": "Joins two equally weighted independent clauses with a coordinating conjunction or a semicolon."}, {"name": "Complex sentence", "thai": "ประโยคความซ้อน", "structure": "Independent clause + subordinating conjunction/relative pronoun + dependent clause (while, although, because, since, when, who, which, that...)", "example": "While the region has always experienced heat, climate change is now exacerbating these extremes.", "note_th": "มีประโยคหลัก (main clause) และประโยคย่อย (subordinate clause) ที่ขึ้นต่อกัน ใช้เชื่อมเหตุผล/เงื่อนไข/เวลา", "note_en": "Combines a main clause with one or more dependent clauses to show cause, contrast, time, or condition."}, {"name": "Compound-complex sentence", "thai": "ประโยคความรวมผสมความซ้อน", "structure": "2+ independent clauses + 1 or more dependent clauses", "example": "Although these measures offer short-term relief, experts caution that they merely treat the symptoms, and they call for long-term investment.", "note_th": "ผสมทั้ง compound และ complex ในประโยคเดียว ให้ความรู้สึกซับซ้อนและเป็นธรรมชาติแบบงานเขียนระดับสูง", "note_en": "Mixes compound and complex structures in one sentence — a hallmark of advanced (C1+) academic and journalistic writing."}], "voice": {"active": {"structure": "S + V + O", "example": "Hospitals have reported a sharp rise in heatstroke cases.", "use_th": "เน้นผู้กระทำ (ใครทำ) ให้ประโยคตรงไปตรงมาและมีพลัง", "use_en": "foregrounds the agent (who does the action); direct and forceful"}, "passive": {"structure": "S(object) + be + V3 (+ by agent)", "example": "Cities will continue to be exposed to increasingly punishing heat.", "use_th": "เน้นผู้ถูกกระทำหรือผลลัพธ์ เมื่อไม่ทราบ/ไม่สำคัญว่าใครเป็นผู้กระทำ นิยมใช้ในข่าวและงานวิชาการ", "use_en": "foregrounds the receiver/result of the action, used when the agent is unknown or unimportant; common in news and academic writing"}, "tip_th": "กฎจำง่าย: ถ้าอยากเน้น 'ใครทำ' ให้ใช้ active; ถ้าอยากเน้น 'เกิดอะไรขึ้นกับใคร/อะไร' ให้ใช้ passive", "tip_en": "Rule of thumb: use active to emphasise WHO does the action; use passive to emphasise WHAT happens to someone/something."}, "otherGrammar": [{"name": "Conditionals (0–3 + Mixed)", "thai": "ประโยคเงื่อนไข", "points": ["Zero: If + present, present → universal truths (If sleep is cut short, toxic proteins are not flushed from the brain.)", "First: If + present, will + V1 → real future possibility (If policymakers do not act, cities will face worsening heat.)", "Second: If + past, would + V1 → unreal/hypothetical present (If the policy existed today, fewer people would suffer.)", "Third: If + past perfect, would have + V3 → unreal past (If investment had come earlier, the damage would have been smaller.)", "Mixed: If + past perfect, would + V1 → past condition, present result (If the city had planned better, it would not be struggling now.)"]}, {"name": "Relative clauses", "thai": "อนุประโยคขยายความ", "points": ["who/that — for people: workers who are especially vulnerable...", "which/that — for things: a pathway that becomes most active during deep sleep.", "whose — possession: a city whose infrastructure cannot cope.", "Non-defining clauses (extra, non-essential info) are set off by commas: Bangkok, which recorded record heat in April, ..."]}, {"name": "Participle clauses", "thai": "อนุประโยคที่ใช้ Participle ย่นประโยค", "points": ["Present participle (-ing) for active meaning: Compounding the problem, electricity demand has surged.", "Past participle (V3) for passive meaning: Conducted at a sleep research institute, the study found...", "Used to make writing more concise and sophisticated — a strong feature of C1 writing."]}, {"name": "Parallel structure", "thai": "โครงสร้างคู่ขนาน", "points": ["Keep listed items in the same grammatical form: it impairs memory, attention, and decision-making. (noun, noun, noun)", "Avoid mixing forms: NOT 'it impairs memory, attention, and deciding' — breaks parallelism."]}, {"name": "Cohesive devices / linking words", "thai": "คำเชื่อมประโยคเพื่อความลื่นไหล", "points": ["Addition: moreover, furthermore, in addition", "Contrast: however, although, on the other hand, whereas", "Cause/effect: as a result, consequently, therefore, this means that", "Sequencing: firstly, subsequently, ultimately, taken together"]}, {"name": "Nominalisation (academic style)", "thai": "การแปลงคำกริยา/คุณศัพท์เป็นคำนาม", "points": ["Turns verbs/adjectives into nouns for a more formal, academic tone.", "e.g. 'the brain declines' → 'the decline of the brain'; 'prices increased rapidly' → 'the rapid increase in prices'.", "Common in academic and research writing to pack more information into fewer clauses."]}, {"name": "Inversion for emphasis", "thai": "การสลับโครงสร้างประโยคเพื่อเน้นย้ำ", "points": ["Negative adverbials fronted + inverted auxiliary: Not only does sleep restore the body, but it also consolidates memory.", "Used sparingly in formal writing (essays, editorials) to add emphasis and variety."]}]};
+const PHONETICS = {"vowelsShort": [{"symbol": "ɪ", "examples": ["sit", "if", "bin"], "note": "sit"}, {"symbol": "e", "examples": ["ten", "bed", "head"], "note": "ten"}, {"symbol": "æ", "examples": ["cat", "black", "man"], "note": "cat"}, {"symbol": "ɒ", "examples": ["hot", "what", "want"], "note": "hot (British)"}, {"symbol": "ʌ", "examples": ["cup", "luck", "blood"], "note": "cup"}, {"symbol": "ʊ", "examples": ["put", "could", "look"], "note": "put"}, {"symbol": "ə", "examples": ["about", "common", "standard"], "note": "schwa — unstressed"}], "vowelsLong": [{"symbol": "iː", "examples": ["see", "heat", "these"], "note": "see"}, {"symbol": "ɑː", "examples": ["father", "arm", "car"], "note": "father"}, {"symbol": "ɔː", "examples": ["saw", "more", "door"], "note": "saw"}, {"symbol": "uː", "examples": ["too", "blue", "shoe"], "note": "too"}, {"symbol": "ɜː", "examples": ["bird", "her", "learn"], "note": "bird"}], "diphthongs": [{"symbol": "eɪ", "examples": ["day", "say", "eight"], "note": "day"}, {"symbol": "aɪ", "examples": ["my", "time", "eye"], "note": "my"}, {"symbol": "ɔɪ", "examples": ["boy", "join", "noise"], "note": "boy"}, {"symbol": "aʊ", "examples": ["how", "house", "now"], "note": "how"}, {"symbol": "əʊ", "examples": ["go", "show", "boat"], "note": "go (British)"}, {"symbol": "ɪə", "examples": ["near", "here", "ear"], "note": "near (British)"}, {"symbol": "eə", "examples": ["hair", "there", "care"], "note": "hair (British)"}, {"symbol": "ʊə", "examples": ["pure", "tour", "sure"], "note": "pure (British)"}], "consonantPairs": [{"voiceless": {"symbol": "p", "examples": ["pen", "cup", "happy"]}, "voiced": {"symbol": "b", "examples": ["bad", "cab", "rabbit"]}}, {"voiceless": {"symbol": "t", "examples": ["tea", "sit", "better"]}, "voiced": {"symbol": "d", "examples": ["did", "red", "ladder"]}}, {"voiceless": {"symbol": "k", "examples": ["cat", "key", "school"]}, "voiced": {"symbol": "g", "examples": ["got", "big", "ago"]}}, {"voiceless": {"symbol": "f", "examples": ["fall", "laugh", "coffee"]}, "voiced": {"symbol": "v", "examples": ["van", "love", "every"]}}, {"voiceless": {"symbol": "θ", "examples": ["thin", "think", "bath"]}, "voiced": {"symbol": "ð", "examples": ["this", "mother", "breathe"]}}, {"voiceless": {"symbol": "s", "examples": ["so", "sit", "nice"]}, "voiced": {"symbol": "z", "examples": ["zoo", "roses", "buzz"]}}, {"voiceless": {"symbol": "ʃ", "examples": ["she", "wish", "station"]}, "voiced": {"symbol": "ʒ", "examples": ["vision", "usual", "measure"]}}, {"voiceless": {"symbol": "tʃ", "examples": ["chain", "watch", "nature"]}, "voiced": {"symbol": "dʒ", "examples": ["jam", "bridge", "soldier"]}}], "otherConsonants": [{"symbol": "h", "examples": ["how", "behind", "hat"]}, {"symbol": "m", "examples": ["man", "hammer", "sum"]}, {"symbol": "n", "examples": ["now", "sunny", "sun"]}, {"symbol": "ŋ", "examples": ["sing", "finger", "drink"]}, {"symbol": "l", "examples": ["leg", "little", "feel"]}, {"symbol": "r", "examples": ["red", "hurry", "around"]}, {"symbol": "j", "examples": ["yes", "use", "beauty"]}, {"symbol": "w", "examples": ["we", "way", "one"]}]};
+const GENERATED_AT = "2026-10-08 10:51";
+
+const TYPE_LABEL_TH = {news:"ข่าว", academic:"วิชาการ", ielts:"IELTS"};
+
+document.getElementById('navMeta').textContent = 'อัปเดตล่าสุด: ' + GENERATED_AT;
+
+// ---------- Nav ----------
+document.querySelectorAll('.navbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    TTS.stop();
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-'+btn.dataset.view).classList.add('active');
+  });
+});
+
+function esc(s){
+  return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ---------- Text-to-speech (browser built-in, works offline once a voice is installed) ----------
+const TTS = (() => {
+  const synth = window.speechSynthesis;
+  const supported = !!synth;
+  let voices = [];
+  let state = 'idle'; // idle | playing | paused
+  let seq = 0; // bumped on every new speak request so stale callbacks are ignored
+
+  function loadVoices(){ voices = synth ? synth.getVoices() : []; }
+  if(supported){
+    loadVoices();
+    synth.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(lang){
+    if(!voices.length) return null;
+    return voices.find(v=>v.lang===lang) || voices.find(v=>v.lang && v.lang.startsWith(lang.split('-')[0])) || null;
+  }
+  function speakParas(texts, rate, startIdx, onPara, onDone){
+    if(!supported) return;
+    synth.cancel();
+    const mySeq = ++seq;
+    let idx = startIdx || 0;
+    function next(){
+      if(mySeq !== seq) return; // superseded by a newer request
+      if(idx >= texts.length){ state = 'idle'; onDone && onDone(); return; }
+      const u = new SpeechSynthesisUtterance(texts[idx]);
+      const v = pickVoice('en-US');
+      if(v) u.voice = v;
+      u.lang = 'en-US';
+      u.rate = rate || 1;
+      u.onstart = () => { if(mySeq===seq){ state = 'playing'; onPara && onPara(idx); } };
+      u.onend = () => { if(mySeq===seq){ idx++; next(); } };
+      u.onerror = (e) => {
+        if(mySeq!==seq) return;
+        if(e.error === 'canceled' || e.error === 'interrupted') return;
+        idx++; next();
+      };
+      synth.speak(u);
+    }
+    next();
+  }
+  function speakOne(text, lang){
+    if(!supported) return;
+    synth.cancel();
+    seq++;
+    const u = new SpeechSynthesisUtterance(text);
+    const v = pickVoice(lang || 'en-US');
+    if(v) u.voice = v;
+    u.lang = lang || 'en-US';
+    synth.speak(u);
+  }
+  function pause(){ if(supported && state==='playing'){ synth.pause(); state = 'paused'; } }
+  function resume(){ if(supported && state==='paused'){ synth.resume(); state = 'playing'; } }
+  function stop(){ if(supported) synth.cancel(); seq++; state = 'idle'; }
+  return { get supported(){ return supported; }, get state(){ return state; }, speakParas, speakOne, pause, resume, stop };
+})();
+function speechWord(w){ return (w||'').replace(/\s*\(.*?\)\s*$/,''); }
+
+function badgeFor(type){
+  return `<span class="badge ${type}">${TYPE_LABEL_TH[type]||type}</span>`;
+}
+
+// ---------- Article rendering ----------
+function renderArticleCard(a, selected){
+  return `<div class="article-card ${selected?'selected':''}" data-id="${a.id}">
+    <div class="row1">${badgeFor(a.type)}<span class="date">${a.date}</span></div>
+    <h3>${esc(a.title)}</h3>
+    <div class="meta">${a.wordCount} words · ${esc(a.typeLabel)}</div>
+  </div>`;
+}
+
+function renderVocabWord(id){
+  const v = VOCAB.find(x=>x.id===id);
+  if(!v) return id;
+  return `<span class="badge level" style="margin:2px 4px 2px 0;cursor:default" title="${esc(v.thai)}">${esc(v.word)}</span>`;
+}
+
+function renderReader(a){
+  if(!a) return `<div class="reader"><div class="empty th">เลือกบทความทางซ้ายเพื่ออ่าน</div></div>`;
+  const paras = a.paragraphs.map((p,i)=>`
+    <div class="para" data-idx="${i}">
+      <div class="para-head">
+        <button class="para-play" data-idx="${i}" title="ฟังย่อหน้านี้">▶</button>
+        <span class="plabel">${p.label}</span>
+      </div>
+      <p>${esc(p.text)}</p>
+    </div>`).join('');
+
+  const promptBox = a.prompt ? `<div class="prompt-box"><b>Task:</b> ${esc(a.prompt)}</div>` : '';
+
+  const analysisRows = [
+    ['structure','🧩 โครงสร้างบทความ (Structure)'],
+    ['tense','⏱️ การใช้ Tense'],
+    ['sentenceVariety','🔗 ความหลากหลายของประโยค (Sentence Variety)'],
+    ['voice','🔄 Active / Passive Voice'],
+    ['collocations','🧩 Word Collocations']
+  ].map(([key,label])=>{
+    const block = a.analysis[key];
+    if(!block) return '';
+    return `<div class="block">
+      <div class="lang-tag">${label}</div>
+      <div class="th-text th">${block.th}</div>
+      <div class="en-text">${block.en}</div>
+    </div>`;
+  }).join('');
+
+  const vocabChips = (a.vocabIds||[]).map(renderVocabWord).join('');
+
+  return `<div class="reader">
+    <div class="reader-head">
+      <div class="tags">${badgeFor(a.type)}<span class="badge level">${a.level} · ${a.wordCount} words</span></div>
+      <h2>${esc(a.title)}</h2>
+      <div class="submeta th">${esc(a.typeLabel)} · เผยแพร่ ${a.date}</div>
+      ${promptBox}
+    </div>
+    <div class="subtabs">
+      <div class="subtab active" data-sub="article">Article</div>
+      <div class="subtab" data-sub="analysis">Analysis</div>
+    </div>
+    <div class="reader-body">
+      <div class="subview" data-subview="article">
+        <div class="read-bar" data-ttsbar>
+          <button class="rbtn" data-action="play">▶ ฟังบทความทั้งหมด</button>
+          <button class="rbtn ghost" data-action="stop">⏹ หยุด</button>
+          <select class="rate-select" data-action="rate">
+            <option value="0.8">0.8x</option>
+            <option value="1" selected>1x</option>
+            <option value="1.15">1.15x</option>
+          </select>
+          <span class="tts-note th">เสียงอ่านจากเบราว์เซอร์ (ไม่ต้องใช้เน็ตถ้ามีเสียงอังกฤษติดตั้งในเครื่องแล้ว)</span>
+        </div>
+        <div class="passage">${paras}</div>
+        <div style="margin-top:14px;">${vocabChips}</div>
+      </div>
+      <div class="subview" data-subview="analysis" style="display:none;">
+        <details class="analysis-sec" open><summary class="th">สรุปการวิเคราะห์โครงสร้างบทความ (Thai + English)</summary>
+          <div class="content">${analysisRows}</div>
+        </details>
+      </div>
+    </div>
+  </div>`;
+}
+
+function wireReader(container){
+  const subtabs = container.querySelectorAll('.subtab');
+  subtabs.forEach(st=>{
+    st.addEventListener('click', ()=>{
+      subtabs.forEach(s=>s.classList.remove('active'));
+      st.classList.add('active');
+      container.querySelectorAll('.subview').forEach(v=>{
+        v.style.display = (v.dataset.subview === st.dataset.sub) ? '' : 'none';
+      });
+      if(st.dataset.sub !== 'article') TTS.stop();
+    });
+  });
+
+  // ---- Text-to-speech wiring ----
+  const bar = container.querySelector('[data-ttsbar]');
+  if(!bar) return; // empty-state reader has no article, nothing to wire
+
+  const playBtn = bar.querySelector('[data-action="play"]');
+  const stopBtn = bar.querySelector('[data-action="stop"]');
+  const rateSel = bar.querySelector('[data-action="rate"]');
+  const note = bar.querySelector('.tts-note');
+
+  if(!TTS.supported){
+    playBtn.disabled = true;
+    stopBtn.disabled = true;
+    container.querySelectorAll('.para-play').forEach(b=>b.disabled = true);
+    note.textContent = 'เบราว์เซอร์นี้ไม่รองรับการอ่านออกเสียง (ลองใช้ Chrome หรือ Edge)';
+  }
+
+  function getParaTexts(){
+    return Array.from(container.querySelectorAll('.para p')).map(p=>p.textContent);
+  }
+  function clearHighlight(){
+    container.querySelectorAll('.para.reading').forEach(el=>el.classList.remove('reading'));
+  }
+  function highlight(idx){
+    clearHighlight();
+    const el = container.querySelector(`.para[data-idx="${idx}"]`);
+    if(el) el.classList.add('reading');
+  }
+  function resetPlayBtn(){
+    playBtn.textContent = '▶ ฟังบทความทั้งหมด';
+    clearHighlight();
+  }
+
+  playBtn.addEventListener('click', ()=>{
+    if(TTS.state === 'playing'){ TTS.pause(); playBtn.textContent = '▶ เล่นต่อ'; return; }
+    if(TTS.state === 'paused'){ TTS.resume(); playBtn.textContent = '⏸ หยุดชั่วคราว'; return; }
+    playBtn.textContent = '⏸ หยุดชั่วคราว';
+    TTS.speakParas(getParaTexts(), parseFloat(rateSel.value), 0,
+      (idx)=>{ highlight(idx); },
+      ()=>{ resetPlayBtn(); }
+    );
+  });
+  stopBtn.addEventListener('click', ()=>{
+    TTS.stop();
+    resetPlayBtn();
+  });
+  container.querySelectorAll('.para-play').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const idx = parseInt(btn.dataset.idx, 10);
+      const texts = getParaTexts();
+      playBtn.textContent = '⏸ หยุดชั่วคราว';
+      TTS.speakParas([texts[idx]], parseFloat(rateSel.value), 0,
+        ()=>{ highlight(idx); },
+        ()=>{ resetPlayBtn(); }
+      );
+    });
+  });
+}
+
+// ---------- TODAY view ----------
+function latestDate(){
+  if(!ARTICLES.length) return null;
+  return ARTICLES.reduce((max,a)=> a.date > max ? a.date : max, ARTICLES[0].date);
+}
+let selectedTodayId = null;
+function renderToday(){
+  const ld = latestDate();
+  const todays = ARTICLES.filter(a=>a.date===ld).sort((a,b)=> b.id.localeCompare(a.id));
+  const list = todays.length ? todays : [...ARTICLES].sort((a,b)=> b.date.localeCompare(a.date)).slice(0,3);
+  if(!selectedTodayId && list.length) selectedTodayId = list[0].id;
+  document.getElementById('todayList').innerHTML = list.map(a=>renderArticleCard(a, a.id===selectedTodayId)).join('');
+  const current = list.find(a=>a.id===selectedTodayId) || list[0];
+  const readerEl = document.getElementById('todayReader');
+  readerEl.innerHTML = renderReader(current);
+  wireReader(readerEl);
+  document.querySelectorAll('#todayList .article-card').forEach(card=>{
+    card.addEventListener('click', ()=>{ TTS.stop(); selectedTodayId = card.dataset.id; renderToday(); });
+  });
+}
+
+// ---------- ARCHIVE view ----------
+let selectedArchiveId = null;
+let archiveFilter = 'all';
+let archiveQuery = '';
+function renderArchiveFilters(){
+  const types = ['all','news','academic','ielts'];
+  const labels = {all:'ทั้งหมด', news:'ข่าว', academic:'วิชาการ', ielts:'IELTS'};
+  document.getElementById('archiveFilters').innerHTML = types.map(t=>
+    `<div class="chip th ${archiveFilter===t?'active':''}" data-t="${t}">${labels[t]}</div>`
+  ).join('');
+  document.querySelectorAll('#archiveFilters .chip').forEach(ch=>{
+    ch.addEventListener('click', ()=>{ TTS.stop(); archiveFilter = ch.dataset.t; renderArchive(); });
+  });
+}
+function renderArchive(){
+  renderArchiveFilters();
+  let list = [...ARTICLES].sort((a,b)=> b.id.localeCompare(a.id));
+  if(archiveFilter!=='all') list = list.filter(a=>a.type===archiveFilter);
+  if(archiveQuery) list = list.filter(a=> a.title.toLowerCase().includes(archiveQuery.toLowerCase()));
+  if(!selectedArchiveId && list.length) selectedArchiveId = list[0].id;
+  document.getElementById('archiveList').innerHTML = list.length
+    ? list.map(a=>renderArticleCard(a, a.id===selectedArchiveId)).join('')
+    : `<div class="empty th">ไม่พบบทความ</div>`;
+  const current = list.find(a=>a.id===selectedArchiveId);
+  const readerEl = document.getElementById('archiveReader');
+  readerEl.innerHTML = renderReader(current);
+  wireReader(readerEl);
+  document.querySelectorAll('#archiveList .article-card').forEach(card=>{
+    card.addEventListener('click', ()=>{ TTS.stop(); selectedArchiveId = card.dataset.id; renderArchive(); });
+  });
+}
+document.getElementById('archiveSearch').addEventListener('input', e=>{
+  archiveQuery = e.target.value; renderArchive();
+});
+
+// ---------- VOCAB view ----------
+let vocabFilter = 'all';
+let vocabQuery = '';
+function renderVocabFilters(){
+  const types = ['all','news','academic','ielts'];
+  const labels = {all:'ทั้งหมด', news:'ข่าว', academic:'วิชาการ', ielts:'IELTS'};
+  document.getElementById('vocabFilters').innerHTML = types.map(t=>
+    `<div class="chip th ${vocabFilter===t?'active':''}" data-t="${t}">${labels[t]}</div>`
+  ).join('');
+  document.querySelectorAll('#vocabFilters .chip').forEach(ch=>{
+    ch.addEventListener('click', ()=>{ vocabFilter = ch.dataset.t; renderVocab(); });
+  });
+}
+function renderVocabCard(v){
+  const syn = (v.synonyms||[]).join(', ') || '—';
+  const ant = (v.antonyms||[]).join(', ') || '—';
+  return `<div class="vcard">
+    <div class="head">
+      <button class="spk-btn" data-word="${esc(speechWord(v.word))}" title="ฟังคำนี้">🔊</button>
+      <span class="word">${esc(v.word)}</span>
+      <span class="phon">${esc(v.phonetic)}</span>
+      <span class="pos">${esc(v.pos)}</span>
+    </div>
+    <div class="thai-meaning th">${esc(v.thai)}</div>
+    <div class="def">${esc(v.definition)}</div>
+    <div class="ex">
+      <button class="spk-btn" data-word="${esc(v.example)}" title="ฟังประโยคตัวอย่าง">🔊</button>
+      “${esc(v.example)}”
+    </div>
+    <div class="synant"><b>Synonyms:</b> ${esc(syn)}<br><b>Antonyms:</b> ${esc(ant)}</div>
+  </div>`;
+}
+function renderVocab(){
+  renderVocabFilters();
+  let list = [...VOCAB];
+  if(vocabFilter!=='all') list = list.filter(v=> (v.source||[]).includes(vocabFilter));
+  if(vocabQuery){
+    const q = vocabQuery.toLowerCase();
+    list = list.filter(v=> v.word.toLowerCase().includes(q) || v.thai.includes(vocabQuery));
+  }
+  document.getElementById('vocabGrid').innerHTML = list.length
+    ? list.map(renderVocabCard).join('')
+    : `<div class="empty th">ไม่พบคำศัพท์</div>`;
+  document.querySelectorAll('#vocabGrid .spk-btn').forEach(btn=>{
+    if(!TTS.supported){ btn.disabled = true; return; }
+    btn.addEventListener('click', ()=> TTS.speakOne(btn.dataset.word, 'en-US'));
+  });
+}
+document.getElementById('vocabSearch').addEventListener('input', e=>{
+  vocabQuery = e.target.value; renderVocab();
+});
+
+// ---------- GRAMMAR view ----------
+function renderGrammar(){
+  document.getElementById('tenseTableBody').innerHTML = GRAMMAR.tenses.map(t=>`
+    <tr>
+      <td><b>${esc(t.name)}</b></td>
+      <td class="th">${esc(t.thai)}</td>
+      <td style="font-family:'Merriweather',serif">${esc(t.structure)}</td>
+      <td class="th">${esc(t.use_th)}</td>
+      <td>${esc(t.example)}</td>
+    </tr>`).join('');
+
+  document.getElementById('sentenceTypesList').innerHTML = GRAMMAR.sentenceTypes.map(s=>`
+    <div class="gram-card">
+      <h3>${esc(s.name)} <span class="th" style="color:var(--ink-soft); font-weight:500;">— ${esc(s.thai)}</span></h3>
+      <div class="structure">${esc(s.structure)}</div>
+      <div style="font-size:13px; margin-bottom:6px;"><i>${esc(s.example)}</i></div>
+      <div class="th" style="font-size:12.5px; color:var(--ink-soft);">${esc(s.note_th)}</div>
+      <div style="font-size:12.5px; color:var(--ink-soft); font-style:italic;">${esc(s.note_en)}</div>
+    </div>`).join('');
+
+  document.getElementById('voiceGrid').innerHTML = `
+    <div class="gram-card">
+      <h3>Active Voice</h3>
+      <div class="structure">${esc(GRAMMAR.voice.active.structure)}</div>
+      <div style="font-size:13px; margin-bottom:6px;"><i>${esc(GRAMMAR.voice.active.example)}</i></div>
+      <div class="th" style="font-size:12.5px; color:var(--ink-soft);">${esc(GRAMMAR.voice.active.use_th)}</div>
+    </div>
+    <div class="gram-card">
+      <h3>Passive Voice</h3>
+      <div class="structure">${esc(GRAMMAR.voice.passive.structure)}</div>
+      <div style="font-size:13px; margin-bottom:6px;"><i>${esc(GRAMMAR.voice.passive.example)}</i></div>
+      <div class="th" style="font-size:12.5px; color:var(--ink-soft);">${esc(GRAMMAR.voice.passive.use_th)}</div>
+    </div>`;
+  document.getElementById('voiceTip').innerHTML = `💡 ${esc(GRAMMAR.voice.tip_th)}<br><span style="font-style:italic;color:var(--ink-soft)">${esc(GRAMMAR.voice.tip_en)}</span>`;
+
+  document.getElementById('otherGrammarList').innerHTML = GRAMMAR.otherGrammar.map(g=>`
+    <div class="gram-card">
+      <h3>${esc(g.name)} <span class="th" style="color:var(--ink-soft); font-weight:500;">— ${esc(g.thai)}</span></h3>
+      <ul>${g.points.map(p=>`<li>${esc(p)}</li>`).join('')}</ul>
+    </div>`).join('');
+}
+
+// ---------- PHONETICS view ----------
+function phonCard(item){
+  const spoken = item.examples.join(', ');
+  return `<div class="phon-card">
+    <button class="phon-play" data-words="${esc(spoken)}" title="ฟังตัวอย่างคำ">🔊</button>
+    <div class="phon-symbol">/${esc(item.symbol)}/</div>
+    <div class="phon-examples">${item.examples.map(esc).join(' · ')}</div>
+  </div>`;
+}
+function phonSection(title, thaiNote, items){
+  return `<div class="gsection">
+    <h2>${title} <span class="th" style="font-size:12px;font-weight:500;color:var(--ink-soft)">${thaiNote||''}</span></h2>
+    <div class="phon-grid">${items.map(phonCard).join('')}</div>
+  </div>`;
+}
+function pairRow(pair){
+  const vl = pair.voiceless, vd = pair.voiced;
+  const side = (item)=>`<div class="pair-side">
+      <button class="phon-play" data-words="${esc(item.examples.join(', '))}" title="ฟังตัวอย่างคำ">🔊</button>
+      <div><div class="phon-symbol" style="margin:0;">/${esc(item.symbol)}/</div>
+      <div class="phon-examples" style="margin:0;">${item.examples.map(esc).join(' · ')}</div></div>
+    </div>`;
+  return `<div class="pair-row">
+    ${side(vl)}
+    <div class="pair-vs th">ไม่ก้อง / ก้อง</div>
+    ${side(vd)}
+  </div>`;
+}
+function renderPhonetics(){
+  const html = `
+    ${phonSection('Vowels — Short', '(สระเสียงสั้น)', PHONETICS.vowelsShort)}
+    ${phonSection('Vowels — Long', '(สระเสียงยาว)', PHONETICS.vowelsLong)}
+    ${phonSection('Diphthongs', '(สระประสม)', PHONETICS.diphthongs)}
+    <div class="gsection">
+      <h2>Consonant Pairs <span class="th" style="font-size:12px;font-weight:500;color:var(--ink-soft)">(พยัญชนะคู่ ไม่ก้อง/ก้อง)</span></h2>
+      <div class="pair-grid">${PHONETICS.consonantPairs.map(pairRow).join('')}</div>
+    </div>
+    ${phonSection('Other Consonants', '(พยัญชนะอื่น ๆ)', PHONETICS.otherConsonants)}
+  `;
+  document.getElementById('phoneticsContent').innerHTML = html;
+  document.querySelectorAll('#phoneticsContent .phon-play').forEach(btn=>{
+    if(!TTS.supported){ btn.disabled = true; return; }
+    btn.addEventListener('click', ()=> TTS.speakOne(btn.dataset.words, 'en-US'));
+  });
+}
+
+// ---------- init ----------
+renderToday();
+renderArchive();
+renderVocab();
+renderGrammar();
+renderPhonetics();
+</script>
+</body>
+</html>
